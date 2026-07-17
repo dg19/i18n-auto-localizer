@@ -112,7 +112,11 @@ export async function translateBatch(
   let raw: Record<string, string>;
   try {
     const content = await callChatCompletion(config, buildPrompt(targetLangLabel, entries));
-    raw = parseJsonResponse(content);
+    const parsed = parseJsonResponse(content);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      throw new Error('OpenRouter response was not a JSON object');
+    }
+    raw = parsed;
   } catch {
     return { translations: new Map(), failedKeys: entries.map((e) => e.key) };
   }

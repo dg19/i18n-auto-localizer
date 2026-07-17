@@ -129,4 +129,33 @@ describe('translateBatch — HTTP retry and batch failure', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(result.failedKeys).toEqual(['hero.title']);
   });
+
+  it('resolves with every key failed (does not throw) when the model responds with JSON null', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(chatCompletionBody('null')));
+
+    const result = await translateBatch(
+      { apiKey: 'key', model: 'test/model', fetchImpl, retryDelaysMs: [0, 0] },
+      'Japanese',
+      [
+        { key: 'hero.title', sourceValue: 'Welcome' },
+        { key: 'footer.copyright', sourceValue: 'All rights reserved' },
+      ]
+    );
+
+    expect(result.translations.size).toBe(0);
+    expect(result.failedKeys.sort()).toEqual(['footer.copyright', 'hero.title']);
+  });
+
+  it('resolves with every key failed (does not throw) when the model responds with a JSON array', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(chatCompletionBody('[]')));
+
+    const result = await translateBatch(
+      { apiKey: 'key', model: 'test/model', fetchImpl, retryDelaysMs: [0, 0] },
+      'Japanese',
+      [{ key: 'hero.title', sourceValue: 'Welcome' }]
+    );
+
+    expect(result.translations.size).toBe(0);
+    expect(result.failedKeys).toEqual(['hero.title']);
+  });
 });

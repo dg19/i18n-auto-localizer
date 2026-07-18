@@ -46,11 +46,11 @@ If you want human review workflows and translator collaboration tooling, a TMS i
 ## How it works
 
 ```
-┌─────────────┐    ┌──────────────┐    ┌───────────────┐    ┌────────────┐
-│  Scan source │ -> │  Diff against │ -> │  Translate via │ -> │  Open a PR │
-│  for t(...)  │    │  locale files │    │  your LLM      │    │  with the  │
-│  key usage   │    │  + lockfile   │    │  (OpenRouter)  │    │  result    │
-└─────────────┘    └──────────────┘    └───────────────┘    └────────────┘
+┌───────────────┐    ┌────────────────┐    ┌─────────────────┐    ┌────────────┐
+│  Scan source  │ -> │  Diff against  │ -> │  Translate via  │ -> │  Open a PR │
+│  for t(...)   │    │  locale files  │    │  your LLM       │    │  with the  │
+│  key usage    │    │  + lockfile    │    │  (OpenRouter)   │    │  result    │
+└───────────────┘    └────────────────┘    └─────────────────┘    └────────────┘
 ```
 
 1. **Scan** — walks your source (`src/**/*.{js,jsx,ts,tsx,vue}` by default) with an AST parser, extracting every `t('key')` / `useTranslation('ns')` / `i18n.t('key')` call, including `.vue` script blocks.

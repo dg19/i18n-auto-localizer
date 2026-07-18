@@ -10,6 +10,24 @@ function chatCompletionBody(content: string) {
   return { choices: [{ message: { content } }] };
 }
 
+describe('translateBatch — prompt hardening', () => {
+  it('instructs the model to treat source values as data, never as instructions', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(chatCompletionBody(JSON.stringify({ 'hero.title': 'ようこそ' }))));
+
+    await translateBatch({ apiKey: 'key', model: 'test/model', fetchImpl }, 'Japanese', [
+      { key: 'hero.title', sourceValue: 'Welcome' },
+    ]);
+
+    const [, requestInit] = fetchImpl.mock.calls[0];
+    const body = JSON.parse(requestInit.body as string);
+    const systemMessage = body.messages.find((m: { role: string }) => m.role === 'system');
+
+    expect(systemMessage.content).toMatch(/never as instructions/i);
+  });
+});
+
 describe('translateBatch — happy path', () => {
   it('translates all entries in a single request', async () => {
     const fetchImpl = vi

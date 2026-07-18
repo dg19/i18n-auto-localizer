@@ -4,6 +4,8 @@ Detects in-use i18n translation keys directly in your JS/TS source (react-i18nex
 
 Existing translations — including ones added before you adopted this tool — are never overwritten.
 
+> **Data flow:** every string value in your source-language locale files is sent to whichever OpenRouter model you configure, in order to translate it. Don't put secrets or personal data in translatable strings — treat the `model` you select as a third party that will see this content, same as any translation service.
+
 ## GitHub Action usage
 
 ```yaml

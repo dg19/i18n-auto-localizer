@@ -10,6 +10,7 @@
     "build": "tsc --noEmit",
     "build:cli": "tsc -p tsconfig.json --module nodenext --outDir dist",
     "build:action": "ncc build src/action/action.ts -o dist/action",
+    "prepublishOnly": "npm run build:cli && npm run build:action",
     "test": "vitest run",
     "test:watch": "vitest"
   },

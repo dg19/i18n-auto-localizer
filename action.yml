@@ -1,0 +1,33 @@
+name: 'i18n Auto-Localizer'
+description: 'Detects in-use i18n translation keys in JS/TS source and generates missing translations via an LLM (OpenRouter).'
+branding:
+  icon: 'globe'
+  color: 'blue'
+inputs:
+  source-lang:
+    description: 'Source language code (e.g. en)'
+    required: true
+  target-langs:
+    description: 'Comma-separated target language codes (e.g. ja,fr,de)'
+    required: true
+  locales-dir:
+    description: 'Root directory of locale JSON files (e.g. ./public/locales)'
+    required: true
+  src:
+    description: 'Comma-separated glob patterns to scan for translation key usage'
+    required: false
+    default: 'src/**/*.{js,jsx,ts,tsx,vue}'
+  model:
+    description: 'OpenRouter model id (e.g. anthropic/claude-sonnet-4.5, openai/gpt-4o)'
+    required: false
+    default: 'anthropic/claude-sonnet-4.5'
+  api-key:
+    description: 'OpenRouter API key'
+    required: true
+  github-token:
+    description: 'Token used to create/update the pull request'
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: 'node20'
+  main: 'dist/action/index.js'

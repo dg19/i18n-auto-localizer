@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import process from 'node:process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { runPipeline, type PipelineResult } from '../src/core/pipeline.js';
 import { DEFAULT_SRC_GLOBS } from '../src/core/defaults.js';
+
+export function isMainModule(moduleUrl: string, argv1: string | undefined): boolean {
+  if (!argv1) return false;
+  return path.resolve(argv1) === fileURLToPath(moduleUrl);
+}
 
 function formatSummary(result: PipelineResult): string {
   const lines: string[] = [`Used keys detected: ${result.usedKeyCount}`];
@@ -89,6 +96,6 @@ export function buildProgram(): Command {
   return program;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url, process.argv[1])) {
   buildProgram().parseAsync(process.argv);
 }

@@ -2,8 +2,31 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
 import path from 'node:path';
-import { buildProgram } from './cli.js';
+import { buildProgram, isMainModule } from './cli.js';
+
+describe('isMainModule', () => {
+  it('returns true when argv[1] resolves to the same file as the module URL', () => {
+    const filePath = path.join(process.cwd(), 'bin', 'cli.js');
+    expect(isMainModule(pathToFileURL(filePath).href, filePath)).toBe(true);
+  });
+
+  it('returns true even when argv[1] is a relative path to the same file', () => {
+    const filePath = path.join(process.cwd(), 'bin', 'cli.js');
+    expect(isMainModule(pathToFileURL(filePath).href, path.join('bin', 'cli.js'))).toBe(true);
+  });
+
+  it('returns false when argv[1] points at a different file (e.g. during a test run)', () => {
+    const filePath = path.join(process.cwd(), 'bin', 'cli.js');
+    expect(isMainModule(pathToFileURL(filePath).href, '/some/other/entrypoint.js')).toBe(false);
+  });
+
+  it('returns false when argv[1] is undefined', () => {
+    const filePath = path.join(process.cwd(), 'bin', 'cli.js');
+    expect(isMainModule(pathToFileURL(filePath).href, undefined)).toBe(false);
+  });
+});
 
 describe('cli run --dry-run', () => {
   let root: string;

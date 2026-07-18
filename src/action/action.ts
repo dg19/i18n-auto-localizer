@@ -69,4 +69,6 @@ async function run(): Promise<void> {
   }
 }
 
-run();
+run().catch((err) => {
+  core.setFailed(err instanceof Error ? err.message : String(err));
+});

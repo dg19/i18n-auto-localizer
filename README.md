@@ -27,6 +27,8 @@ jobs:
           api-key: ${{ secrets.OPENROUTER_API_KEY }}
 ```
 
+> **Note:** your repository must also have "Allow GitHub Actions to create and approve pull requests" enabled under **Settings → Actions → General**, or PR creation will fail with a 403, even with `permissions: pull-requests: write` set above.
+
 ## Local CLI usage
 
 Try it against your own repo before wiring up the Action:

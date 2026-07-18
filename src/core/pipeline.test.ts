@@ -106,6 +106,12 @@ describe('runPipeline — full run', () => {
     const written = JSON.parse(await readFile(path.join(root, 'locales', 'ja', 'common.json'), 'utf8'));
     expect(written.hero.title).toBe('既存の手動翻訳');
     expect(written.footer.copyright).toBe('全著作権所有');
+
+    const lockfile = JSON.parse(await readFile(path.join(root, '.i18n-localizer-lock.json'), 'utf8'));
+    expect(lockfile.namespaces.common['hero.title']).toEqual(expect.any(String));
+    expect(lockfile.namespaces.common['hero.title'].length).toBeGreaterThan(0);
+    expect(lockfile.namespaces.common['footer.copyright']).toEqual(expect.any(String));
+    expect(lockfile.namespaces.common['footer.copyright'].length).toBeGreaterThan(0);
   });
 
   it('does not call the translator and does not write files in dry-run mode', async () => {

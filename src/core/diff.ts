@@ -55,12 +55,23 @@ export function computeDiff(
     }
   }
 
+  // Keys that resolved to zero source namespaces are reported as undefinedKeys and are
+  // never added to usedByNamespaceKey, so without this guard they'd also look orphaned
+  // in the target locale and get reported twice. Skip orphan emission for any
+  // namespace/key pair already surfaced as an undefined key.
+  const undefinedByNamespaceKey = new Set<string>();
+  for (const undefinedKey of undefinedKeys) {
+    if (undefinedKey.namespace !== null) {
+      undefinedByNamespaceKey.add(`${undefinedKey.namespace} ${undefinedKey.key}`);
+    }
+  }
+
   const orphanKeys: { namespace: string; key: string }[] = [];
   for (const [namespace, valueMap] of Object.entries(targetLocales)) {
     for (const key of valueMap.keys()) {
-      if (!usedByNamespaceKey.has(`${namespace} ${key}`)) {
-        orphanKeys.push({ namespace, key });
-      }
+      if (usedByNamespaceKey.has(`${namespace} ${key}`)) continue;
+      if (undefinedByNamespaceKey.has(`${namespace} ${key}`)) continue;
+      orphanKeys.push({ namespace, key });
     }
   }
 

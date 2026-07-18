@@ -26,6 +26,16 @@ export function buildPrBody(result: PipelineResult, sourceLang: string): string 
     }
   }
 
+  const orphanEntries = result.languages.flatMap((l) =>
+    l.orphanKeys.map((o) => `${l.lang}: \`${o.namespace}:${o.key}\``)
+  );
+  if (orphanEntries.length > 0) {
+    lines.push('', '### ⚠️ Orphan keys (present in target locale, no longer used in code)');
+    for (const entry of orphanEntries) {
+      lines.push(`- ${entry}`);
+    }
+  }
+
   const failedEntries = result.languages.flatMap((l) => l.failedKeys.map((k) => `${l.lang}: ${k}`));
   if (failedEntries.length > 0) {
     lines.push('', '### ❌ Translation failed for these keys');

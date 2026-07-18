@@ -95,4 +95,40 @@ describe('cli run --dry-run', () => {
     cwdSpy.mockRestore();
     errorSpy.mockRestore();
   });
+
+  it('prints orphan keys present in the target locale but no longer used in code', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'i18n-cli-'));
+    await mkdir(path.join(root, 'src'), { recursive: true });
+    await mkdir(path.join(root, 'locales', 'en'), { recursive: true });
+    await mkdir(path.join(root, 'locales', 'ja'), { recursive: true });
+    await writeFile(path.join(root, 'src', 'App.tsx'), `t('hero.title');`, 'utf8');
+    await writeFile(
+      path.join(root, 'locales', 'en', 'common.json'),
+      JSON.stringify({ hero: { title: 'Welcome' } }),
+      'utf8'
+    );
+    await writeFile(
+      path.join(root, 'locales', 'ja', 'common.json'),
+      JSON.stringify({ hero: { title: 'ようこそ' }, stale: { key: '古い値' } }),
+      'utf8'
+    );
+
+    const cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(root);
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await buildProgram().parseAsync([
+      'node', 'cli', 'run',
+      '--source-lang', 'en',
+      '--target-langs', 'ja',
+      '--locales-dir', path.join(root, 'locales'),
+      '--src', 'src/**/*.tsx',
+      '--dry-run',
+    ]);
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Orphan keys'));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('common:stale.key'));
+
+    cwdSpy.mockRestore();
+    logSpy.mockRestore();
+  });
 });

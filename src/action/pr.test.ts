@@ -8,7 +8,7 @@ function sampleResult(overrides: Partial<PipelineResult> = {}): PipelineResult {
     usedKeyCount: 2,
     undefinedKeys: [],
     dynamicUsages: [],
-    languages: [{ lang: 'ja', translatedKeys: 2, stampedKeys: 0, failedKeys: [], changed: true }],
+    languages: [{ lang: 'ja', translatedKeys: 2, stampedKeys: 0, failedKeys: [], changed: true, orphanKeys: [] }],
     changedFiles: [],
     ...overrides,
   };
@@ -38,13 +38,40 @@ describe('buildPrBody', () => {
     const body = buildPrBody(
       sampleResult({
         languages: [
-          { lang: 'ja', translatedKeys: 1, stampedKeys: 0, failedKeys: ['footer.copyright'], changed: true },
+          {
+            lang: 'ja',
+            translatedKeys: 1,
+            stampedKeys: 0,
+            failedKeys: ['footer.copyright'],
+            changed: true,
+            orphanKeys: [],
+          },
         ],
       }),
       'en'
     );
     expect(body).toContain('Translation failed');
     expect(body).toContain('ja: footer.copyright');
+  });
+
+  it('lists orphan keys per language as a warning section', () => {
+    const body = buildPrBody(
+      sampleResult({
+        languages: [
+          {
+            lang: 'ja',
+            translatedKeys: 0,
+            stampedKeys: 0,
+            failedKeys: [],
+            changed: false,
+            orphanKeys: [{ namespace: 'common', key: 'stale.key' }],
+          },
+        ],
+      }),
+      'en'
+    );
+    expect(body).toContain('Orphan keys');
+    expect(body).toContain('ja: `common:stale.key`');
   });
 });
 

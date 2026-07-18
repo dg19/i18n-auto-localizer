@@ -26,6 +26,7 @@ export interface PipelineLanguageResult {
   stampedKeys: number;
   failedKeys: string[];
   changed: boolean;
+  orphanKeys: { namespace: string; key: string }[];
 }
 
 export interface PipelineResult {
@@ -99,6 +100,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       stampedKeys: diffResult.toStamp.length,
       failedKeys,
       changed: diffResult.toTranslate.length > 0 || diffResult.toStamp.length > 0,
+      orphanKeys: diffResult.orphanKeys,
     });
   }
 

@@ -61,7 +61,7 @@ describe('runPipeline — full run', () => {
     });
 
     expect(result.languages).toEqual([
-      { lang: 'ja', translatedKeys: 2, stampedKeys: 0, failedKeys: [], changed: true },
+      { lang: 'ja', translatedKeys: 2, stampedKeys: 0, failedKeys: [], changed: true, orphanKeys: [] },
     ]);
 
     const written = JSON.parse(await readFile(path.join(root, 'locales', 'ja', 'common.json'), 'utf8'));
@@ -101,6 +101,7 @@ describe('runPipeline — full run', () => {
       stampedKeys: 1,
       failedKeys: [],
       changed: true,
+      orphanKeys: [],
     });
 
     const written = JSON.parse(await readFile(path.join(root, 'locales', 'ja', 'common.json'), 'utf8'));
@@ -132,8 +133,37 @@ describe('runPipeline — full run', () => {
 
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(result.languages).toEqual([
-      { lang: 'ja', translatedKeys: 2, stampedKeys: 0, failedKeys: [], changed: true },
+      { lang: 'ja', translatedKeys: 2, stampedKeys: 0, failedKeys: [], changed: true, orphanKeys: [] },
     ]);
     await expect(readFile(path.join(root, 'locales', 'ja', 'common.json'), 'utf8')).rejects.toThrow();
+  });
+
+  it('surfaces orphan keys present in the target locale but no longer used in code', async () => {
+    root = await setupProject();
+    await mkdir(path.join(root, 'locales', 'ja'), { recursive: true });
+    await writeFile(
+      path.join(root, 'locales', 'ja', 'common.json'),
+      JSON.stringify(
+        { hero: { title: 'ようこそ' }, footer: { copyright: '全著作権所有' }, stale: { key: '古い値' } },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    const fetchImpl = vi.fn();
+
+    const result = await runPipeline({
+      sourceLang: 'en',
+      targetLangs: ['ja'],
+      localesDir: path.join(root, 'locales'),
+      srcGlobs: ['src/**/*.tsx'],
+      cwd: root,
+      model: 'test/model',
+      apiKey: 'key',
+      dryRun: true,
+      fetchImpl,
+    });
+
+    expect(result.languages[0].orphanKeys).toEqual([{ namespace: 'common', key: 'stale.key' }]);
   });
 });

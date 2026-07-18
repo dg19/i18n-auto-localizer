@@ -91,4 +91,15 @@ describe('computeDiff — orphan keys', () => {
     const result = computeDiff([], [], source, target, emptyLockfile);
     expect(result.orphanKeys).toEqual([{ namespace: 'common', key: 'stale.key' }]);
   });
+
+  it('does not double-report a key as both undefined and orphan when it resolves to zero source namespaces', () => {
+    const source = localeData({ common: {} });
+    // The target locale still has a leftover value for a key that is used in code
+    // (with an explicit namespace) but does not exist in any source namespace — it's
+    // already reported as undefined, so it should not also show up as orphaned.
+    const target = localeData({ common: { 'typo.key': 'stale leftover value' } });
+    const result = computeDiff([usedKey('typo.key', 'common')], [], source, target, emptyLockfile);
+    expect(result.undefinedKeys).toEqual([usedKey('typo.key', 'common')]);
+    expect(result.orphanKeys).toEqual([]);
+  });
 });

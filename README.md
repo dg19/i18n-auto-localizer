@@ -24,7 +24,9 @@ Works with **react-i18next**, **vue-i18n**, **next-intl**, and raw **i18next** �
 - [License](#license)
 
 ---
+
 <img width="940" height="837" alt="スクリーンショット 2026-07-19 080627" src="https://github.com/user-attachments/assets/ad7cb7b7-1354-48d1-9d2e-2a7c0517c51c" />
+
 ---
 
 ## Why this instead of Crowdin / Lokalise / Phrase?

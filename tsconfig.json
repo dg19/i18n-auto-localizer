@@ -14,5 +14,5 @@
     "declaration": false
   },
   "include": ["src", "bin"],
-  "exclude": ["node_modules", "dist", "fixtures"]
+  "exclude": ["node_modules", "dist", "fixtures", "**/*.test.ts"]
 }

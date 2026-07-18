@@ -26,6 +26,7 @@ Works with **react-i18next**, **vue-i18n**, **next-intl**, and raw **i18next** �
 ---
 <img width="940" height="837" alt="スクリーンショット 2026-07-19 080627" src="https://github.com/user-attachments/assets/ad7cb7b7-1354-48d1-9d2e-2a7c0517c51c" />
 ---
+
 ## Why this instead of Crowdin / Lokalise / Phrase?
 
 Traditional translation-management platforms (Crowdin, Lokalise, Phrase) coordinate *human* translators: a web UI, review stages, assignment workflows — and they require you to first export the keys you want translated. Most GitHub Actions for i18n are thin wrappers around syncing files to and from one of those platforms.

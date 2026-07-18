@@ -1,3 +1,5 @@
+import { DEFAULT_SRC_GLOBS } from '../core/defaults.js';
+
 export interface ActionInputs {
   sourceLang: string;
   targetLangs: string[];
@@ -16,13 +18,13 @@ export function parseInputs(getInput: (name: string) => string): ActionInputs {
   // srcRaw truthy below, sending the default glob through the .split(',')
   // branch and shredding it on the commas inside `{js,jsx,ts,tsx,vue}`
   // (producing ['src/**/*.{js', 'jsx', 'ts', 'tsx', 'vue}']) instead of
-  // hitting the single-element fallback array. This file is the single
-  // source of truth for the default glob value — do not re-add a `default:`
-  // for `src` in action.yml, or this guard silently breaks again.
+  // hitting the single-element fallback array. src/core/defaults.ts is the
+  // single source of truth for the default glob value — do not re-add a
+  // `default:` for `src` in action.yml, or this guard silently breaks again.
   const srcRaw = getInput('src');
   const srcGlobs = srcRaw
     ? srcRaw.split(',').map((s) => s.trim())
-    : ['src/**/*.{js,jsx,ts,tsx,vue}'];
+    : DEFAULT_SRC_GLOBS;
   return {
     sourceLang: getInput('source-lang'),
     targetLangs: getInput('target-langs')

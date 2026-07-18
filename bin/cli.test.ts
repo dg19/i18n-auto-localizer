@@ -77,23 +77,31 @@ describe('cli run --dry-run', () => {
     await mkdir(path.join(root, 'src'), { recursive: true });
     await mkdir(path.join(root, 'locales', 'en'), { recursive: true });
 
+    const originalApiKey = process.env.OPENROUTER_API_KEY;
     delete process.env.OPENROUTER_API_KEY;
     const cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(root);
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await buildProgram().parseAsync([
-      'node', 'cli', 'run',
-      '--source-lang', 'en',
-      '--target-langs', 'ja',
-      '--locales-dir', path.join(root, 'locales'),
-    ]);
+    try {
+      await buildProgram().parseAsync([
+        'node', 'cli', 'run',
+        '--source-lang', 'en',
+        '--target-langs', 'ja',
+        '--locales-dir', path.join(root, 'locales'),
+      ]);
 
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('OPENROUTER_API_KEY'));
-    expect(process.exitCode).toBe(1);
-
-    process.exitCode = 0;
-    cwdSpy.mockRestore();
-    errorSpy.mockRestore();
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('OPENROUTER_API_KEY'));
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.exitCode = 0;
+      if (originalApiKey === undefined) {
+        delete process.env.OPENROUTER_API_KEY;
+      } else {
+        process.env.OPENROUTER_API_KEY = originalApiKey;
+      }
+      cwdSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
   });
 
   it('prints orphan keys present in the target locale but no longer used in code', async () => {

@@ -78,6 +78,25 @@ describe('scanFileContent — hook-bound namespace', () => {
     expect(result.usedKeys[0].namespace).toBeNull();
   });
 
+  it('keeps two sibling components binding t to different namespaces distinct', () => {
+    const code = `
+      function Home() {
+        const { t } = useTranslation('a');
+        return t('someKey');
+      }
+
+      function About() {
+        const { t } = useTranslation('b');
+        return t('someKey');
+      }
+    `;
+    const result = scanFileContent(code, 'src/Siblings.tsx');
+    expect(result.usedKeys).toEqual([
+      { key: 'someKey', namespace: 'a', file: 'src/Siblings.tsx', line: 4 },
+      { key: 'someKey', namespace: 'b', file: 'src/Siblings.tsx', line: 9 },
+    ]);
+  });
+
   it('an explicit namespace prefix on the key wins over the hook-bound namespace', () => {
     const code = `
       function Home() {

@@ -2,6 +2,7 @@
 import { Command } from 'commander';
 import process from 'node:process';
 import { runPipeline, type PipelineResult } from '../src/core/pipeline.js';
+import { DEFAULT_SRC_GLOBS } from '../src/core/defaults.js';
 
 function formatSummary(result: PipelineResult): string {
   const lines: string[] = [`Used keys detected: ${result.usedKeyCount}`];
@@ -71,7 +72,7 @@ export function buildProgram(): Command {
         localesDir: opts.localesDir,
         srcGlobs: opts.src
           ? opts.src.split(',').map((s: string) => s.trim())
-          : ['src/**/*.{js,jsx,ts,tsx,vue}'],
+          : DEFAULT_SRC_GLOBS,
         cwd: process.cwd(),
         model: opts.model,
         apiKey: apiKey ?? '',

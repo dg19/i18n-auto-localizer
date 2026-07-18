@@ -73,7 +73,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: dg19/i18n-auto-localizer@v1
+      - uses: dg19/i18n-auto-localizer@v0.1.0
         with:
           source-lang: en
           target-langs: ja,fr,de
@@ -82,6 +82,8 @@ jobs:
 ```
 
 > **Note:** your repository must also have "Allow GitHub Actions to create and approve pull requests" enabled under **Settings → Actions → General**, or PR creation will fail with a 403, even with `permissions: pull-requests: write` set above.
+
+> **Versioning:** this project is pre-1.0 (`0.x`), so pin to an exact tag like `@v0.1.0` rather than a floating major-version tag — the API may still change between minor versions until `1.0.0`. A floating `@v1` tag will be introduced once the API is considered stable.
 
 **Data flow:** every string value in your source-language locale files is sent to whichever OpenRouter model you configure, in order to translate it. Don't put secrets or personal data in translatable strings — treat the `model` you select as a third party that will see this content, same as any translation service.
 

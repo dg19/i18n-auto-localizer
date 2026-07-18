@@ -44,7 +44,7 @@ export function buildProgram(): Command {
     .requiredOption('--source-lang <lang>', 'source language code')
     .requiredOption('--target-langs <langs>', 'comma-separated target language codes')
     .requiredOption('--locales-dir <dir>', 'root directory of locale JSON files')
-    .option('--src <globs>', 'comma-separated glob patterns to scan', 'src/**/*.{js,jsx,ts,tsx,vue}')
+    .option('--src <globs>', 'comma-separated glob patterns to scan')
     .option('--model <model>', 'OpenRouter model id', 'anthropic/claude-sonnet-4.5')
     .option('--dry-run', 'preview the diff without calling the API or writing files', false)
     .action(async (opts) => {
@@ -59,7 +59,9 @@ export function buildProgram(): Command {
         sourceLang: opts.sourceLang,
         targetLangs: opts.targetLangs.split(',').map((s: string) => s.trim()),
         localesDir: opts.localesDir,
-        srcGlobs: opts.src.split(',').map((s: string) => s.trim()),
+        srcGlobs: opts.src
+          ? opts.src.split(',').map((s: string) => s.trim())
+          : ['src/**/*.{js,jsx,ts,tsx,vue}'],
         cwd: process.cwd(),
         model: opts.model,
         apiKey: apiKey ?? '',

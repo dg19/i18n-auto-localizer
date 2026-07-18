@@ -41,6 +41,37 @@ describe('cli run --dry-run', () => {
     logSpy.mockRestore();
   });
 
+  it('uses the default --src glob (containing commas in brace expansion) when --src is omitted', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'i18n-cli-'));
+    await mkdir(path.join(root, 'src'), { recursive: true });
+    await mkdir(path.join(root, 'locales', 'en'), { recursive: true });
+    // .tsx is one of the extensions in the default brace-expansion glob
+    // 'src/**/*.{js,jsx,ts,tsx,vue}' — this file must be found WITHOUT --src.
+    await writeFile(path.join(root, 'src', 'App.tsx'), `t('hero.title');`, 'utf8');
+    await writeFile(
+      path.join(root, 'locales', 'en', 'common.json'),
+      JSON.stringify({ hero: { title: 'Welcome' } }),
+      'utf8'
+    );
+
+    const cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(root);
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await buildProgram().parseAsync([
+      'node', 'cli', 'run',
+      '--source-lang', 'en',
+      '--target-langs', 'ja',
+      '--locales-dir', path.join(root, 'locales'),
+      '--dry-run',
+      // note: --src intentionally omitted to exercise the default glob
+    ]);
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('translated=1'));
+
+    cwdSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
   it('fails with a clear error when the API key is missing and --dry-run is not set', async () => {
     root = await mkdtemp(path.join(tmpdir(), 'i18n-cli-'));
     await mkdir(path.join(root, 'src'), { recursive: true });

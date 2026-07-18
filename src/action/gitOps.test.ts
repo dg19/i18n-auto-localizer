@@ -12,8 +12,19 @@ describe('gitOps', () => {
   it('commitAll stages the given files then commits with the given message', () => {
     const run = vi.fn();
     commitAll('/repo', ['locales/ja/common.json', '.i18n-localizer-lock.json'], 'chore: update translations', run);
-    expect(run).toHaveBeenNthCalledWith(1, '/repo', ['add', 'locales/ja/common.json', '.i18n-localizer-lock.json']);
-    expect(run).toHaveBeenNthCalledWith(2, '/repo', ['commit', '-m', 'chore: update translations']);
+    expect(run).toHaveBeenNthCalledWith(3, '/repo', ['add', 'locales/ja/common.json', '.i18n-localizer-lock.json']);
+    expect(run).toHaveBeenNthCalledWith(4, '/repo', ['commit', '-m', 'chore: update translations']);
+  });
+
+  it('commitAll configures a git committer identity before staging and committing', () => {
+    const run = vi.fn();
+    commitAll('/repo', ['locales/ja/common.json'], 'chore: update translations', run);
+    expect(run).toHaveBeenNthCalledWith(1, '/repo', ['config', 'user.name', 'github-actions[bot]']);
+    expect(run).toHaveBeenNthCalledWith(2, '/repo', [
+      'config', 'user.email', 'github-actions[bot]@users.noreply.github.com',
+    ]);
+    expect(run).toHaveBeenNthCalledWith(3, '/repo', ['add', 'locales/ja/common.json']);
+    expect(run).toHaveBeenNthCalledWith(4, '/repo', ['commit', '-m', 'chore: update translations']);
   });
 
   it('pushBranch force-pushes with upstream tracking so re-runs update the same PR', () => {

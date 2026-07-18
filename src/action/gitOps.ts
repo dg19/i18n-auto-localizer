@@ -17,6 +17,8 @@ export function commitAll(
   message: string,
   run: GitRun = defaultGitRun
 ): void {
+  run(cwd, ['config', 'user.name', 'github-actions[bot]']);
+  run(cwd, ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
   run(cwd, ['add', ...files]);
   run(cwd, ['commit', '-m', message]);
 }

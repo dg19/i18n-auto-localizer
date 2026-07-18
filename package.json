@@ -1,6 +1,6 @@
 {
   "name": "i18n-auto-localizer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "GitHub Action and CLI that scans JS/TS source for in-use i18n translation keys (react-i18next, vue-i18n, next-intl) and auto-generates missing locale translations via any LLM on OpenRouter, without ever overwriting existing translations.",
   "keywords": [
     "i18n",

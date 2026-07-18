@@ -88975,6 +88975,15 @@ async function scanSource(patterns, cwd) {
 
 
 
+const FLAT_FORMAT_NAMESPACE = 'translation';
+async function locales_isDirectory(candidate) {
+    const info = await (0,promises_namespaceObject.stat)(candidate).catch(() => null);
+    return info?.isDirectory() ?? false;
+}
+async function isFile(candidate) {
+    const info = await (0,promises_namespaceObject.stat)(candidate).catch(() => null);
+    return info?.isFile() ?? false;
+}
 function flattenJson(obj, prefix = '') {
     const map = new Map();
     for (const [key, value] of Object.entries(obj)) {
@@ -89008,14 +89017,29 @@ function unflattenToJson(map) {
 }
 async function loadNamespaceLocales(localesDir, lang) {
     const langDir = external_node_path_default().join(localesDir, lang);
-    const files = await out_default()('*.json', { cwd: langDir });
     const data = {};
-    for (const file of files) {
-        const namespace = external_node_path_default().basename(file, '.json');
-        const raw = await (0,promises_namespaceObject.readFile)(external_node_path_default().join(langDir, file), 'utf8');
-        data[namespace] = flattenJson(JSON.parse(raw));
+    if (await locales_isDirectory(langDir)) {
+        const files = await out_default()('*.json', { cwd: langDir });
+        for (const file of files) {
+            const namespace = external_node_path_default().basename(file, '.json');
+            const raw = await (0,promises_namespaceObject.readFile)(external_node_path_default().join(langDir, file), 'utf8');
+            data[namespace] = flattenJson(JSON.parse(raw));
+        }
+        return data;
+    }
+    const flatFilePath = external_node_path_default().join(localesDir, `${lang}.json`);
+    if (await isFile(flatFilePath)) {
+        const raw = await (0,promises_namespaceObject.readFile)(flatFilePath, 'utf8');
+        data[FLAT_FORMAT_NAMESPACE] = flattenJson(JSON.parse(raw));
     }
     return data;
+}
+async function detectLocaleFormat(localesDir, lang) {
+    if (await locales_isDirectory(external_node_path_default().join(localesDir, lang)))
+        return 'directory';
+    if (await isFile(external_node_path_default().join(localesDir, `${lang}.json`)))
+        return 'flat';
+    return 'none';
 }
 
 ;// CONCATENATED MODULE: ./src/core/lockfile.ts
@@ -89254,8 +89278,13 @@ function mergeTranslations(existing, translations) {
     }
     return merged;
 }
-async function writeLocaleFile(localesDir, lang, namespace, valueMap) {
-    const filePath = external_node_path_default().join(localesDir, lang, `${namespace}.json`);
+function localeFilePath(localesDir, lang, namespace, format = 'directory') {
+    return format === 'flat'
+        ? external_node_path_default().join(localesDir, `${lang}.json`)
+        : external_node_path_default().join(localesDir, lang, `${namespace}.json`);
+}
+async function writeLocaleFile(localesDir, lang, namespace, valueMap, format = 'directory') {
+    const filePath = localeFilePath(localesDir, lang, namespace, format);
     await (0,promises_namespaceObject.mkdir)(external_node_path_default().dirname(filePath), { recursive: true });
     await (0,promises_namespaceObject.writeFile)(filePath, JSON.stringify(unflattenToJson(valueMap), null, 2) + '\n', 'utf8');
 }
@@ -89277,6 +89306,7 @@ async function runPipeline(options) {
     const changedFiles = new Set();
     let undefinedKeys = [];
     let lockfileDirty = false;
+    const sourceFormat = await detectLocaleFormat(options.localesDir, options.sourceLang);
     for (const targetLang of options.targetLangs) {
         const targetLocales = await loadNamespaceLocales(options.localesDir, targetLang);
         const diffResult = computeDiff(scan.usedKeys, scan.dynamicUsages, sourceLocales, targetLocales, lockfile);
@@ -89285,6 +89315,12 @@ async function runPipeline(options) {
         let translatedKeys = 0;
         const failedKeys = [];
         if (!options.dryRun) {
+            const existingTargetFormat = await detectLocaleFormat(options.localesDir, targetLang);
+            const targetFormat = existingTargetFormat === 'none'
+                ? sourceFormat === 'flat'
+                    ? 'flat'
+                    : 'directory'
+                : existingTargetFormat;
             const byNamespace = new Map();
             for (const target of diffResult.toTranslate) {
                 if (!byNamespace.has(target.namespace))
@@ -89299,8 +89335,8 @@ async function runPipeline(options) {
                 const existing = targetLocales[namespace] ?? new Map();
                 const merged = mergeTranslations(existing, batchResult.translations);
                 targetLocales[namespace] = merged;
-                await writeLocaleFile(options.localesDir, targetLang, namespace, merged);
-                changedFiles.add(external_node_path_default().join(options.localesDir, targetLang, `${namespace}.json`));
+                await writeLocaleFile(options.localesDir, targetLang, namespace, merged, targetFormat);
+                changedFiles.add(localeFilePath(options.localesDir, targetLang, namespace, targetFormat));
                 for (const target of targets) {
                     if (batchResult.translations.has(target.key)) {
                         setLockHash(lockfile, namespace, target.key, sha256(target.sourceValue));

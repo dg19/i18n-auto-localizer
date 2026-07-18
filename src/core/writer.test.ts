@@ -52,4 +52,12 @@ describe('writeLocaleFile', () => {
     const raw = await readFile(path.join(tmpDir, 'fr', 'common.json'), 'utf8');
     expect(JSON.parse(raw)).toEqual({ hero: { title: 'Bienvenue' } });
   });
+
+  it('writes to {localesDir}/{lang}.json when format is "flat"', async () => {
+    tmpDir = await mkdtemp(path.join(tmpdir(), 'i18n-writer-'));
+    await writeLocaleFile(tmpDir, 'en', 'translation', new Map([['sidebar.title', 'Shop Admin']]), 'flat');
+
+    const raw = await readFile(path.join(tmpDir, 'en.json'), 'utf8');
+    expect(JSON.parse(raw)).toEqual({ sidebar: { title: 'Shop Admin' } });
+  });
 });

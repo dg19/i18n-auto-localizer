@@ -166,4 +166,40 @@ describe('runPipeline — full run', () => {
 
     expect(result.languages[0].orphanKeys).toEqual([{ namespace: 'common', key: 'stale.key' }]);
   });
+
+  it('writes a brand-new target language in the flat single-file format when the source uses it', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'i18n-pipeline-'));
+    await mkdir(path.join(root, 'src'), { recursive: true });
+    await mkdir(path.join(root, 'locales'), { recursive: true });
+    await writeFile(path.join(root, 'src', 'App.tsx'), `t('sidebar.title');`, 'utf8');
+    await writeFile(
+      path.join(root, 'locales', 'ja.json'),
+      JSON.stringify({ sidebar: { title: 'ショップ管理' } }, null, 2),
+      'utf8'
+    );
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(chatCompletionBody(JSON.stringify({ 'sidebar.title': 'Shop Admin' }))));
+
+    const result = await runPipeline({
+      sourceLang: 'ja',
+      targetLangs: ['en'],
+      localesDir: path.join(root, 'locales'),
+      srcGlobs: ['src/**/*.tsx'],
+      cwd: root,
+      model: 'test/model',
+      apiKey: 'key',
+      dryRun: false,
+      fetchImpl,
+    });
+
+    expect(result.languages[0].translatedKeys).toBe(1);
+
+    const written = JSON.parse(await readFile(path.join(root, 'locales', 'en.json'), 'utf8'));
+    expect(written).toEqual({ sidebar: { title: 'Shop Admin' } });
+
+    await expect(
+      readFile(path.join(root, 'locales', 'en', 'translation.json'), 'utf8')
+    ).rejects.toThrow();
+  });
 });

@@ -1,10 +1,10 @@
 import path from 'node:path';
 import { scanSource } from './scanner.js';
-import { loadNamespaceLocales } from './locales.js';
+import { loadNamespaceLocales, detectLocaleFormat, type LocaleFormat } from './locales.js';
 import { readLockfile, writeLockfile, setLockHash } from './lockfile.js';
 import { computeDiff } from './diff.js';
 import { translateBatch } from './translator.js';
-import { mergeTranslations, writeLocaleFile } from './writer.js';
+import { mergeTranslations, writeLocaleFile, localeFilePath } from './writer.js';
 import { sha256 } from './hash.js';
 import type { DynamicKeyUsage, TranslationTarget, UsedKey } from './types.js';
 
@@ -47,6 +47,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   let undefinedKeys: UsedKey[] = [];
   let lockfileDirty = false;
 
+  const sourceFormat = await detectLocaleFormat(options.localesDir, options.sourceLang);
+
   for (const targetLang of options.targetLangs) {
     const targetLocales = await loadNamespaceLocales(options.localesDir, targetLang);
     const diffResult = computeDiff(scan.usedKeys, scan.dynamicUsages, sourceLocales, targetLocales, lockfile);
@@ -56,6 +58,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     const failedKeys: string[] = [];
 
     if (!options.dryRun) {
+      const existingTargetFormat = await detectLocaleFormat(options.localesDir, targetLang);
+      const targetFormat: LocaleFormat =
+        existingTargetFormat === 'none'
+          ? sourceFormat === 'flat'
+            ? 'flat'
+            : 'directory'
+          : existingTargetFormat;
+
       const byNamespace = new Map<string, TranslationTarget[]>();
       for (const target of diffResult.toTranslate) {
         if (!byNamespace.has(target.namespace)) byNamespace.set(target.namespace, []);
@@ -74,8 +84,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         const existing = targetLocales[namespace] ?? new Map<string, string>();
         const merged = mergeTranslations(existing, batchResult.translations);
         targetLocales[namespace] = merged;
-        await writeLocaleFile(options.localesDir, targetLang, namespace, merged);
-        changedFiles.add(path.join(options.localesDir, targetLang, `${namespace}.json`));
+        await writeLocaleFile(options.localesDir, targetLang, namespace, merged, targetFormat);
+        changedFiles.add(localeFilePath(options.localesDir, targetLang, namespace, targetFormat));
 
         for (const target of targets) {
           if (batchResult.translations.has(target.key)) {

@@ -14,9 +14,8 @@ inputs:
     description: 'Root directory of locale JSON files (e.g. ./public/locales)'
     required: true
   src:
-    description: 'Comma-separated glob patterns to scan for translation key usage'
+    description: 'Comma-separated glob patterns to scan for translation key usage (default: src/**/*.{js,jsx,ts,tsx,vue})'
     required: false
-    default: 'src/**/*.{js,jsx,ts,tsx,vue}'
   model:
     description: 'OpenRouter model id (e.g. anthropic/claude-sonnet-4.5, openai/gpt-4o)'
     required: false

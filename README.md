@@ -108,7 +108,7 @@ npm install -g i18n-auto-localizer
 # or: npx i18n-auto-localizer
 
 export OPENROUTER_API_KEY=sk-or-...
-i18n-auto-localizer run \
+npx i18n-auto-localizer run \
   --source-lang en \
   --target-langs ja,fr \
   --locales-dir ./public/locales
